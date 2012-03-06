@@ -1,0 +1,10 @@
+README
+------
+
+This project studies BLAS implementations of matrix-matrix and matrix-vector
+operations.  The goal is to provide useful feedback on the maximum floating
+point operations a system can perform.  Used in conjunction with a 
+memory bandwidth test, computational bottlenecks can be found.
+
+The Makefile is setup for my system.  Adjust as necessary for your own
+vendor BLAS implementations and compilers.

@@ -8,3 +8,9 @@ memory bandwidth test, computational bottlenecks can be found.
 
 The Makefile is setup for my system.  Adjust as necessary for your own
 vendor BLAS implementations and compilers.
+
+By the way, others have already put together similar (and probably
+more robust) test sets.  One is the BLAS Benchmark, part of LLCBench:
+  http://icl.cs.utk.edu/projects/llcbench/index.htm
+I found roughly the same results using that and mine.  I did mine
+mostly to ensure I knew what I was doing.

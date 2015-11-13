@@ -32,9 +32,9 @@ program matmat_driver
       call dgemm('n', 'n', m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
     end do
     t2 = omp_get_wtime()-t
-    flops = dble(m*m) / dble(1e6) / t2
+    flops = dble(m*m) / dble(1e9) / t2
     flops = dble(2*maxi*m)*flops
-    print '(i6, a,f18.6)', m, ",", flops
+    print '(i6, a,f18.6)', m, " ", flops
     ! print ('i4  *, m, ",", flops / dble(1e6) / t2, ",", t2
     deallocate(A, B, C)
   end do

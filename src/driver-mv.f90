@@ -32,7 +32,7 @@ program matvec_driver
 !    print *, "elapsed time = ", t2, " seconds."
 !    print *, "# ops e6     = ", flops / dble(1e6)
 !    print *, "MFLOPS       = ", 
-    print *, m, ",", flops / dble(1e6) / t2
+    print *, m, " ", flops / dble(1.0e9) / t2
     deallocate(A, x, y)
   end do
 end program matvec_driver

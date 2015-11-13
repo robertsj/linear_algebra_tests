@@ -4,7 +4,7 @@
 # User Options
 #===============================================================================
 
-COMPILER = gfortran
+COMPILER = ifort
 OPTIMIZE = yes
 
 #===============================================================================
@@ -13,21 +13,15 @@ OPTIMIZE = yes
 
 # For linking MKL, see:
 #   http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
-LIBMKLSERIAL   = -I$(MKLROOT)/include -Wl,--start-group       \
-                 $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a   \
-                 $(MKLROOT)/lib/intel64/libmkl_sequential.a   \
-                 $(MKLROOT)/lib/intel64/libmkl_core.a         \
-                 -Wl,--end-group -lpthread -lm
-LIBMKLTHREAD   = -I$(MKLROOT)/include  -Wl,--start-group      \
-                 $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a   \
-                 $(MKLROOT)/lib/intel64/libmkl_intel_thread.a \
-                 $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,    \
-                 --end-group -openmp -lpthread -lm
-LIBACMLSERIAL  = -L /home/robertsj/opt/acml/acml4.4.0/gfortran64/lib/  \
-                 -lacml -lgfortran
-LIBACMLTHREAD  = -L /home/robertsj/opt/acml/acml4.4.0/gfortran64_mp/lib/ \
-                 -lacml_mp -lgfortran
-LIBBLAS        =  -L -lblas3
+LIBMKLSERIAL   =  -i8 -I${MKLROOT}/include/intel64/ilp64 -I${MKLROOT}/include \
+                   ${MKLROOT}/lib/intel64/libmkl_blas95_ilp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm
+LIBMKLTHREAD   =  -i8 -qopenmp -I${MKLROOT}/include/intel64/ilp64 -I${MKLROOT}/include \
+                  ${MKLROOT}/lib/intel64/libmkl_blas95_ilp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a -Wl,--end-group -lpthread -lm
+LIBACMLSERIAL  = -L /home/robertsj/opt/acml/gfortran64/lib  \
+                 -lacml -lgfortran  -lrt -ldl
+LIBACMLTHREAD  = -L /home/robertsj/opt/acml/gfortran64_mp/lib \
+                 -lacml_mp -lgfortran  -lrt -ldl
+LIBBLAS        =  -L /usr/lib -lblas
 
 #===============================================================================
 # Compiler Definitions
@@ -53,47 +47,50 @@ endif
 # Targets
 #===============================================================================
 
-all: driver-mv-row-x driver-mv-col-x driver-mv-omp-x \
-     driver-mv-blas-x \
-     driver-mv-mkl-s-x driver-mv-mkl-t-x driver-mv-acml-s-x driver-mv-acml-t-x \
-     driver-mm-x \
-     driver-mm-blas-x \
-     driver-mm-mkl-s-x driver-mm-mkl-t-x driver-mm-acml-s-x driver-mm-acml-t-x 
+all: simple blas mkl acml
+
+simple: mv-row-x mv-col-x mv-omp-x mm-x 
+
+blas : mv-blas-x mm-blas-x 
+
+mkl : mv-mkl-s-x mv-mkl-t-x mm-mkl-s-x mm-mkl-t-x
+
+acml : mv-acml-s-x mv-acml-t-x mm-acml-s-x mm-acml-t-x
 
 #===============================================================================
 # Matrix-Vector Tests
 #===============================================================================
 
 # Row-major MV test
-driver-mv-row-x:
+mv-row-x:
 	$(F90) $(OPT) $(OMPFLAG) matvec-row.f90 driver-mv.f90 -o $@ 
 
 # Col-major MV test
-driver-mv-col-x:
+mv-col-x:
 	$(F90) $(OPT) $(OMPFLAG) matvec-col.f90 driver-mv.f90 -o $@ 
 
 # Row-major MV test with OpenMP.  Row-major works better.
-driver-mv-omp-x:
+mv-omp-x:
 	$(F90) $(OPT) $(OMPFLAG) matvec-omp.f90 driver-mv.f90 -o $@ 
 
 # Serial default blas
-driver-mv-blas-s-x:
+mv-blas-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mv.f90 -o $@ $(LIBBLAS)
 
 # Serial MKL
-driver-mv-mkl-s-x:
+mv-mkl-s-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mv.f90 -o $@ $(LIBMKLSERIAL)
 
 # Threaded MKL
-driver-mv-mkl-t-x:
+mv-mkl-t-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mv.f90 -o $@ $(LIBMKLTHREAD)
 
 # Serial ACML
-driver-mv-acml-s-x:
+mv-acml-s-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mv.f90 -o $@ $(LIBACMLSERIAL)
 
 # Threaded ACML
-driver-mv-acml-t-x:
+mv-acml-t-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mv.f90 -o $@ $(LIBACMLTHREAD)
 
 #===============================================================================
@@ -101,29 +98,28 @@ driver-mv-acml-t-x:
 #===============================================================================
 
 # Simple Implementation
-driver-mm-x:
+mm-x:
 	$(F90) $(OPT) $(OMPFLAG) matmat.f90 driver-mm.f90 -o $@ 
 
 # Serial default BLAS
-driver-mm-blas-s-x:
+mm-blas-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mm.f90 -o $@ $(LIBBLAS)
 
 # Serial MKL
-driver-mm-mkl-s-x:
+mm-mkl-s-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mm.f90 -o $@ $(LIBMKLSERIAL)
 
 # Threaded MKL
-driver-mm-mkl-t-x:
+mm-mkl-t-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mm.f90 -o $@ $(LIBMKLTHREAD)
 
 # Serial ACML
-driver-mm-acml-s-x:
+mm-acml-s-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mm.f90 -o $@ $(LIBACMLSERIAL)
 
 # Threaded ACML
-driver-mm-acml-t-x:
+mm-acml-t-x:
 	$(F90) $(OPT) $(OMPFLAG) driver-mm.f90 -o $@ $(LIBACMLTHREAD)
-
 
 clean:
 	@rm -f *.o *.mod *-x
@@ -136,9 +132,8 @@ neat:
 #===============================================================================
 
 .SUFFIXES: .F90 .o
-.PHONY: clean neat
+.PHONY: clean neat mkl acml simple
 
 %.o: %.f90
 	$(F90) $(F90FLAGS) $(INCLUDE) -c $<
-
 

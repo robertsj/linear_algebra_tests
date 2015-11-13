@@ -4,7 +4,7 @@
 # User Options
 #===============================================================================
 
-COMPILER = ifort
+COMPILER = gfortran
 OPTIMIZE = yes
 
 #===============================================================================
@@ -27,6 +27,7 @@ LIBACMLSERIAL  = -L /home/robertsj/opt/acml/acml4.4.0/gfortran64/lib/  \
                  -lacml -lgfortran
 LIBACMLTHREAD  = -L /home/robertsj/opt/acml/acml4.4.0/gfortran64_mp/lib/ \
                  -lacml_mp -lgfortran
+LIBBLAS        =  -L -lblas3
 
 #===============================================================================
 # Compiler Definitions
@@ -53,8 +54,10 @@ endif
 #===============================================================================
 
 all: driver-mv-row-x driver-mv-col-x driver-mv-omp-x \
+     driver-mv-blas-x \
      driver-mv-mkl-s-x driver-mv-mkl-t-x driver-mv-acml-s-x driver-mv-acml-t-x \
      driver-mm-x \
+     driver-mm-blas-x \
      driver-mm-mkl-s-x driver-mm-mkl-t-x driver-mm-acml-s-x driver-mm-acml-t-x 
 
 #===============================================================================
@@ -72,6 +75,10 @@ driver-mv-col-x:
 # Row-major MV test with OpenMP.  Row-major works better.
 driver-mv-omp-x:
 	$(F90) $(OPT) $(OMPFLAG) matvec-omp.f90 driver-mv.f90 -o $@ 
+
+# Serial default blas
+driver-mv-blas-s-x:
+	$(F90) $(OPT) $(OMPFLAG) driver-mv.f90 -o $@ $(LIBBLAS)
 
 # Serial MKL
 driver-mv-mkl-s-x:
@@ -96,6 +103,10 @@ driver-mv-acml-t-x:
 # Simple Implementation
 driver-mm-x:
 	$(F90) $(OPT) $(OMPFLAG) matmat.f90 driver-mm.f90 -o $@ 
+
+# Serial default BLAS
+driver-mm-blas-s-x:
+	$(F90) $(OPT) $(OMPFLAG) driver-mm.f90 -o $@ $(LIBBLAS)
 
 # Serial MKL
 driver-mm-mkl-s-x:
